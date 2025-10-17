@@ -1,0 +1,23 @@
+{
+  "name": "simple-ecommerce-store",
+  "version": "1.0.0",
+  "description": "A simple e-commerce store built with HTML, CSS, JavaScript, and Node.js",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "build": "echo 'No build process needed for this simple project'"
+  },
+  "keywords": ["ecommerce", "javascript", "nodejs", "shopping-cart"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
