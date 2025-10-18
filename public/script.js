@@ -16,42 +16,80 @@ const products = [
         name: "Wireless Headphones",
         price: 99.99,
         image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-        description: "High-quality wireless headphones with noise cancellation"
+        description: "High-quality wireless headphones with noise cancellation",
+        category: "audio",
+        rating: 4.5,
+        reviews: 128
     },
     {
         id: 2,
         name: "Smartphone",
         price: 699.99,
         image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
-        description: "Latest smartphone with advanced features"
+        description: "Latest smartphone with advanced features",
+        category: "electronics",
+        rating: 4.8,
+        reviews: 256
     },
     {
         id: 3,
         name: "Laptop",
         price: 1299.99,
         image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400",
-        description: "Powerful laptop for work and gaming"
+        description: "Powerful laptop for work and gaming",
+        category: "computers",
+        rating: 4.6,
+        reviews: 89
     },
     {
         id: 4,
         name: "Smart Watch",
         price: 199.99,
         image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
-        description: "Feature-rich smartwatch with health monitoring"
+        description: "Feature-rich smartwatch with health monitoring",
+        category: "electronics",
+        rating: 4.3,
+        reviews: 167
     },
     {
         id: 5,
         name: "Camera",
         price: 599.99,
         image: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400",
-        description: "Professional DSLR camera for photography"
+        description: "Professional DSLR camera for photography",
+        category: "electronics",
+        rating: 4.7,
+        reviews: 74
     },
     {
         id: 6,
         name: "Gaming Console",
         price: 499.99,
         image: "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400",
-        description: "Next-gen gaming console with 4K support"
+        description: "Next-gen gaming console with 4K support",
+        category: "gaming",
+        rating: 4.9,
+        reviews: 203
+    },
+    {
+        id: 7,
+        name: "Tablet",
+        price: 399.99,
+        image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400",
+        description: "Versatile tablet for work and entertainment",
+        category: "electronics",
+        rating: 4.4,
+        reviews: 95
+    },
+    {
+        id: 8,
+        name: "Gaming Mouse",
+        price: 79.99,
+        image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400",
+        description: "High-precision gaming mouse with RGB lighting",
+        category: "gaming",
+        rating: 4.2,
+        reviews: 156
     }
 ];
 
@@ -59,6 +97,8 @@ function init() {
     displayProducts();
     updateCart();
     setupEventListeners();
+    setupCategoryFilter(); 
+    setupSearch();
 }
 
 function displayProducts() {
@@ -217,6 +257,138 @@ function scrollToProducts() {
     document.getElementById('products').scrollIntoView({
         behavior: 'smooth'
     });
+}
+
+
+function setupCategoryFilter() {
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    
+    categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            categoryBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const category = btn.dataset.category;
+            filterProducts(category);
+        });
+    });
+}
+
+function filterProducts(category) {
+    const filteredProducts = category === 'all' 
+        ? products 
+        : products.filter(product => product.category === category);
+    
+    displayFilteredProducts(filteredProducts);
+}
+
+function displayFilteredProducts(filteredProducts) {
+    productsGrid.innerHTML = filteredProducts.map(product => `
+        <div class="product-card">
+            <img src="${product.image}" alt="${product.name}" class="product-image">
+            <div class="product-badge">${product.category}</div>
+            <h3>${product.name}</h3>
+            <p>${product.description}</p>
+            <div class="product-rating">
+                ${generateStarRating(product.rating)}
+                <span class="rating-text">(${product.reviews})</span>
+            </div>
+            <div class="product-price">$${product.price}</div>
+            <button class="add-to-cart" onclick="addToCart(${product.id})">
+                Add to Cart
+            </button>
+        </div>
+    `).join('');
+}
+
+function generateStarRating(rating) {
+    const fullStars = Math.floor(rating);
+    const halfStar = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+    
+    return '★'.repeat(fullStars) + (halfStar ? '½' : '') + '☆'.repeat(emptyStars);
+}
+
+
+function setupSearch() {
+    const searchInput = document.getElementById('search-input');
+    const searchBtn = document.getElementById('search-btn');
+    
+    const performSearch = () => {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        if (searchTerm) {
+            const filteredProducts = products.filter(product => 
+                product.name.toLowerCase().includes(searchTerm) ||
+                product.description.toLowerCase().includes(searchTerm) ||
+                product.category.toLowerCase().includes(searchTerm)
+            );
+            displayFilteredProducts(filteredProducts);
+        } else {
+            displayProducts();
+        }
+    };
+    
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+}
+
+function showProductDetails(productId) {
+    const product = products.find(p => p.id === productId);
+    const modal = document.getElementById('product-modal');
+    const content = document.getElementById('product-details-content');
+    
+    content.innerHTML = `
+        <div class="product-details-content">
+            <div>
+                <img src="${product.image}" alt="${product.name}" class="product-details-image">
+            </div>
+            <div class="product-details-info">
+                <h2>${product.name}</h2>
+                <div class="product-rating">
+                    ${generateStarRating(product.rating)}
+                    <span class="rating-text">${product.rating} (${product.reviews} reviews)</span>
+                </div>
+                <div class="product-details-price">$${product.price}</div>
+                <p class="product-details-description">${product.description}</p>
+                <div class="product-details-meta">
+                    <span><strong>Category:</strong> ${product.category}</span>
+                    <span><strong>SKU:</strong> PROD-${product.id.toString().padStart(3, '0')}</span>
+                </div>
+                <button class="add-to-cart large" onclick="addToCart(${product.id}); closeProductModal()">
+                    Add to Cart - $${product.price}
+                </button>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+function closeProductModal() {
+    document.getElementById('product-modal').style.display = 'none';
+}
+
+function displayProducts() {
+    productsGrid.innerHTML = products.map(product => `
+        <div class="product-card" onclick="showProductDetails(${product.id})">
+            <img src="${product.image}" alt="${product.name}" class="product-image">
+            <div class="product-badge">${product.category}</div>
+            <h3>${product.name}</h3>
+            <p>${product.description}</p>
+            <div class="product-rating">
+                ${generateStarRating(product.rating)}
+                <span class="rating-text">(${product.reviews})</span>
+            </div>
+            <div class="product-price">$${product.price}</div>
+            <button class="add-to-cart" onclick="event.stopPropagation(); addToCart(${product.id})">
+                Add to Cart
+            </button>
+        </div>
+    `).join('');
 }
 
 document.addEventListener('DOMContentLoaded', init);

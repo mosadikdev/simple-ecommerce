@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechStore - Simple E-Commerce</title>
+    <title>Simple E-Commerce</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,10 +12,14 @@
             <div class="nav-container">
                 <h1 class="logo">My Simple Store</h1>
                 <div class="nav-links">
-                    <a href="#home">Home</a>
-                    <a href="#products">Products</a>
-                    <button id="cart-btn" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</button>
-                </div>
+    <a href="#home">Home</a>
+    <a href="#products">Products</a>
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search products...">
+        <button id="search-btn">🔍</button>
+    </div>
+    <button id="cart-btn" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</button>
+</div>
             </div>
         </nav>
     </header>
@@ -23,11 +27,21 @@
     <main>
         <section id="home" class="hero">
             <div class="hero-content">
-                <h2>Welcome to TechStore</h2>
+                <h2>Welcome to My Simple Store</h2>
                 <p>Your one-stop shop for the latest gadgets</p>
                 <button class="cta-button" onclick="scrollToProducts()">Shop Now</button>
             </div>
         </section>
+
+        <section class="categories-section">
+    <div class="categories-container">
+        <button class="category-btn active" data-category="all">All Products</button>
+        <button class="category-btn" data-category="electronics">Electronics</button>
+        <button class="category-btn" data-category="computers">Computers</button>
+        <button class="category-btn" data-category="audio">Audio</button>
+        <button class="category-btn" data-category="gaming">Gaming</button>
+    </div>
+</section>
 
         <section id="products" class="products-section">
             <h2>Featured Products</h2>
@@ -68,5 +82,13 @@
     </footer>
 
     <script src="script.js"></script>
+
+    <div id="product-modal" class="modal">
+    <div class="modal-content product-details">
+        <span class="close">&times;</span>
+        <div id="product-details-content">
+        </div>
+    </div>
+</div>
 </body>
 </html>
