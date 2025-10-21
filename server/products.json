@@ -1,0 +1,68 @@
+[
+    {
+        "id": 1,
+        "name": "Wireless Headphones",
+        "price": 99.99,
+        "image": "/images/headphones.jpg",
+        "description": "High-quality wireless headphones with noise cancellation",
+        "category": "audio",
+        "rating": 4.5,
+        "reviews": 128,
+        "stock": 15
+    },
+    {
+        "id": 2,
+        "name": "Smartphone",
+        "price": 699.99,
+        "image": "/images/smartphone.jpg",
+        "description": "Latest smartphone with advanced features",
+        "category": "electronics",
+        "rating": 4.8,
+        "reviews": 256,
+        "stock": 8
+    },
+    {
+        "id": 3,
+        "name": "Laptop",
+        "price": 1299.99,
+        "image": "/images/laptop.jpg",
+        "description": "Powerful laptop for work and gaming",
+        "category": "computers",
+        "rating": 4.6,
+        "reviews": 89,
+        "stock": 5
+    },
+    {
+        "id": 4,
+        "name": "Smart Watch",
+        "price": 199.99,
+        "image": "/images/smartwatch.jpg",
+        "description": "Feature-rich smartwatch with health monitoring",
+        "category": "electronics",
+        "rating": 4.3,
+        "reviews": 167,
+        "stock": 20
+    },
+    {
+        "id": 5,
+        "name": "Camera",
+        "price": 599.99,
+        "image": "/images/camera.jpg",
+        "description": "Professional DSLR camera for photography",
+        "category": "electronics",
+        "rating": 4.7,
+        "reviews": 74,
+        "stock": 12
+    },
+    {
+        "id": 6,
+        "name": "Gaming Console",
+        "price": 499.99,
+        "image": "/images/console.jpg",
+        "description": "Next-gen gaming console with 4K support",
+        "category": "gaming",
+        "rating": 4.9,
+        "reviews": 203,
+        "stock": 7
+    }
+]

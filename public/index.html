@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple E-Commerce</title>
+    <title>TechStore - Simple E-Commerce</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,14 +12,24 @@
             <div class="nav-container">
                 <h1 class="logo">My Simple Store</h1>
                 <div class="nav-links">
-    <a href="#home">Home</a>
-    <a href="#products">Products</a>
-    <div class="search-container">
-        <input type="text" id="search-input" placeholder="Search products...">
-        <button id="search-btn">🔍</button>
-    </div>
-    <button id="cart-btn" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</button>
-</div>
+                    <a href="#home">Home</a>
+                    <a href="#products">Products</a>
+                    <div class="search-container">
+                        <input type="text" id="search-input" placeholder="Search products...">
+                        <button id="search-btn">🔍</button>
+                    </div>
+                    
+                    <div class="user-menu">
+                        <button id="user-btn" class="user-btn">👤 Account</button>
+                        <div id="user-dropdown" class="user-dropdown">
+                            <a href="#" id="orders-link">My Orders</a>
+                            <a href="#" id="profile-link">Profile</a>
+                            <a href="#" id="logout-link">Logout</a>
+                        </div>
+                    </div>
+                    
+                    <button id="cart-btn" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</button>
+                </div>
             </div>
         </nav>
     </header>
@@ -27,21 +37,21 @@
     <main>
         <section id="home" class="hero">
             <div class="hero-content">
-                <h2>Welcome to My Simple Store</h2>
+                <h2>Welcome to TechStore</h2>
                 <p>Your one-stop shop for the latest gadgets</p>
                 <button class="cta-button" onclick="scrollToProducts()">Shop Now</button>
             </div>
         </section>
 
         <section class="categories-section">
-    <div class="categories-container">
-        <button class="category-btn active" data-category="all">All Products</button>
-        <button class="category-btn" data-category="electronics">Electronics</button>
-        <button class="category-btn" data-category="computers">Computers</button>
-        <button class="category-btn" data-category="audio">Audio</button>
-        <button class="category-btn" data-category="gaming">Gaming</button>
-    </div>
-</section>
+            <div class="categories-container">
+                <button class="category-btn active" data-category="all">All Products</button>
+                <button class="category-btn" data-category="electronics">Electronics</button>
+                <button class="category-btn" data-category="computers">Computers</button>
+                <button class="category-btn" data-category="audio">Audio</button>
+                <button class="category-btn" data-category="gaming">Gaming</button>
+            </div>
+        </section>
 
         <section id="products" class="products-section">
             <h2>Featured Products</h2>
@@ -49,6 +59,32 @@
             </div>
         </section>
     </main>
+
+    <div id="auth-modal" class="modal">
+        <div class="modal-content auth-modal">
+            <span class="close">&times;</span>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="register">Register</button>
+            </div>
+            
+            <form id="login-form" class="auth-form active">
+                <h3>Welcome Back</h3>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            
+            <form id="register-form" class="auth-form">
+                <h3>Create Account</h3>
+                <input type="text" placeholder="Full Name" required>
+                <input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+                <input type="password" placeholder="Confirm Password" required>
+                <button type="submit">Register</button>
+            </form>
+        </div>
+    </div>
 
     <div id="cart-modal" class="modal">
         <div class="modal-content">
@@ -77,18 +113,27 @@
         </div>
     </div>
 
+    <div id="orders-modal" class="modal">
+        <div class="modal-content orders-modal">
+            <span class="close">&times;</span>
+            <h2>My Orders</h2>
+            <div id="orders-list">
+            </div>
+        </div>
+    </div>
+
+    <div id="product-modal" class="modal">
+        <div class="modal-content product-details">
+            <span class="close">&times;</span>
+            <div id="product-details-content">
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2025. Built with ❤️</p>
     </footer>
 
     <script src="script.js"></script>
-
-    <div id="product-modal" class="modal">
-    <div class="modal-content product-details">
-        <span class="close">&times;</span>
-        <div id="product-details-content">
-        </div>
-    </div>
-</div>
 </body>
 </html>
