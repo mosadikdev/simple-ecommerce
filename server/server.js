@@ -335,6 +335,78 @@ app.get('*', (req, res) => {
 
 initializeDataFiles();
 
+
+app.get('/api/coupons', (req, res) => {
+    try {
+        const coupons = readJSONFile(path.join(__dirname, 'coupons.json'));
+        res.json(coupons);
+    } catch (error) {
+        console.error('Error loading coupons:', error);
+        res.status(500).json({ error: 'Failed to load coupons' });
+    }
+});
+
+app.post('/api/coupons', (req, res) => {
+    try {
+        const coupon = req.body;
+        const coupons = readJSONFile(path.join(__dirname, 'coupons.json'));
+        
+        coupon.id = Date.now();
+        coupons.push(coupon);
+        
+        const success = writeJSONFile(path.join(__dirname, 'coupons.json'), coupons);
+        if (success) {
+            res.json({ success: true, coupon });
+        } else {
+            res.status(500).json({ error: 'Failed to save coupon' });
+        }
+    } catch (error) {
+        console.error('Error saving coupon:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/reviews/:productId', (req, res) => {
+    try {
+        const reviews = readJSONFile(path.join(__dirname, 'reviews.json'));
+        const productReviews = reviews.filter(r => r.productId === parseInt(req.params.productId));
+        res.json(productReviews);
+    } catch (error) {
+        console.error('Error loading reviews:', error);
+        res.status(500).json({ error: 'Failed to load reviews' });
+    }
+});
+
+app.post('/api/reviews', (req, res) => {
+    try {
+        const review = req.body;
+        const reviews = readJSONFile(path.join(__dirname, 'reviews.json'));
+        
+        review.id = Date.now();
+        review.date = new Date().toISOString();
+        reviews.push(review);
+        
+        const success = writeJSONFile(path.join(__dirname, 'reviews.json'), reviews);
+        if (success) {
+            res.json({ success: true, review });
+        } else {
+            res.status(500).json({ error: 'Failed to save review' });
+        }
+    } catch (error) {
+        console.error('Error saving review:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+function initializeDataFiles() {
+    if (!fs.existsSync(path.join(__dirname, 'coupons.json'))) {
+        writeJSONFile(path.join(__dirname, 'coupons.json'), []);
+    }
+    if (!fs.existsSync(path.join(__dirname, 'reviews.json'))) {
+        writeJSONFile(path.join(__dirname, 'reviews.json'), []);
+    }
+}
+
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📧 Visit: http://localhost:${PORT}`);

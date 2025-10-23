@@ -2,6 +2,23 @@ let cart = [];
 let currentUser = null;
 let users = [];
 
+let coupons = JSON.parse(localStorage.getItem('coupons')) || [];
+let reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+let adminUsers = JSON.parse(localStorage.getItem('adminUsers')) || [{ email: 'admin@store.com', password: 'admin123' }];
+let currentCoupon = null;
+
+const adminModal = document.getElementById('admin-modal');
+const adminTabs = document.querySelectorAll('.admin-tab');
+const addProductModal = document.getElementById('add-product-modal');
+const addProductForm = document.getElementById('add-product-form');
+const addCouponModal = document.getElementById('add-coupon-modal');
+const addCouponForm = document.getElementById('add-coupon-form');
+const reviewsModal = document.getElementById('reviews-modal');
+const reviewsList = document.getElementById('reviews-list');
+const addReviewForm = document.getElementById('add-review-form');
+const reviewStars = document.getElementById('review-stars');
+const reviewRating = document.getElementById('review-rating');
+
 function initializeData() {
     try {
         const cartData = localStorage.getItem('cart');
@@ -391,14 +408,12 @@ function showNotification(message) {
     }, 3000);
 }
 
-// Scroll to products section
 function scrollToProducts() {
     document.getElementById('products').scrollIntoView({
         behavior: 'smooth'
     });
 }
 
-// Category filter system
 function setupCategoryFilter() {
     const categoryBtns = document.querySelectorAll('.category-btn');
     
@@ -710,5 +725,415 @@ function sendOrderConfirmation(order) {
         }
     }, 1000);
 }
+
+
+
+
+
+
+
+
+function setupAdminPanel() {
+    const adminBtn = document.getElementById('admin-btn');
+    if (adminBtn) {
+        adminBtn.addEventListener('click', () => {
+            showAdminLogin();
+        });
+    }
+
+    adminTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetTab = tab.dataset.tab;
+            
+            adminTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            document.querySelectorAll('.admin-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`admin-${targetTab}`).classList.add('active');
+            
+            if (targetTab === 'products') loadProductsAdmin();
+            if (targetTab === 'orders') loadOrdersAdmin();
+            if (targetTab === 'coupons') loadCouponsAdmin();
+            if (targetTab === 'analytics') loadAnalytics();
+        });
+    });
+
+    addProductForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        addNewProduct();
+    });
+
+    addCouponForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        addNewCoupon();
+    });
+
+    if (reviewStars) {
+        const stars = reviewStars.querySelectorAll('span');
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = parseInt(star.dataset.rating);
+                setStarRating(rating);
+            });
+        });
+    }
+
+    if (addReviewForm) {
+        addReviewForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addNewReview();
+        });
+    }
+}
+
+function showAdminLogin() {
+    const email = prompt('Admin Email:');
+    const password = prompt('Admin Password:');
+    
+    const admin = adminUsers.find(u => u.email === email && u.password === password);
+    if (admin) {
+        adminModal.style.display = 'block';
+        loadProductsAdmin();
+    } else {
+        alert('Invalid admin credentials!');
+    }
+}
+
+function loadProductsAdmin() {
+    const productsList = document.getElementById('products-list');
+    productsList.innerHTML = products.map(product => `
+        <div class="admin-item">
+            <div class="admin-item-header">
+                <div>
+                    <h4>${product.name}</h4>
+                    <div class="stock-info ${product.stock < 10 ? 'stock-low' : 'stock-available'}">
+                        Stock: ${product.stock} | Price: $${product.price}
+                    </div>
+                </div>
+                <div class="admin-actions">
+                    <button class="btn-success" onclick="editProduct(${product.id})">Edit</button>
+                    <button class="btn-danger" onclick="deleteProduct(${product.id})">Delete</button>
+                </div>
+            </div>
+            <p>${product.description}</p>
+        </div>
+    `).join('');
+}
+
+function showAddProductForm() {
+    addProductModal.style.display = 'block';
+}
+
+function addNewProduct() {
+    const formData = new FormData(addProductForm);
+    const newProduct = {
+        id: Date.now(),
+        name: formData.get('name'),
+        price: parseFloat(formData.get('price')),
+        image: formData.get('image'),
+        description: formData.get('description'),
+        category: formData.get('category'),
+        rating: parseFloat(formData.get('rating')) || 4.0,
+        reviews: 0,
+        stock: parseInt(formData.get('stock'))
+    };
+
+    products.push(newProduct);
+    addProductModal.style.display = 'none';
+    addProductForm.reset();
+    loadProductsAdmin();
+    displayProducts(); 
+    
+    showNotification('Product added successfully!');
+}
+
+function deleteProduct(productId) {
+    if (confirm('Are you sure you want to delete this product?')) {
+        products = products.filter(p => p.id !== productId);
+        loadProductsAdmin();
+        displayProducts();
+        showNotification('Product deleted successfully!');
+    }
+}
+
+function loadOrdersAdmin() {
+    const ordersList = document.getElementById('orders-admin-list');
+    const allOrders = getAllOrders();
+    
+    if (allOrders.length === 0) {
+        ordersList.innerHTML = '<p>No orders found.</p>';
+        return;
+    }
+
+    ordersList.innerHTML = allOrders.map(order => `
+        <div class="admin-item">
+            <div class="admin-item-header">
+                <div>
+                    <h4>Order #${order.id}</h4>
+                    <div>Customer: ${order.userEmail || 'Unknown'} | Date: ${new Date(order.date).toLocaleDateString()}</div>
+                </div>
+                <div class="admin-actions">
+                    <span class="order-status status-completed">${order.status}</span>
+                    <button class="btn-success" onclick="updateOrderStatus('${order.id}', 'completed')">Complete</button>
+                    <button class="btn-danger" onclick="updateOrderStatus('${order.id}', 'cancelled')">Cancel</button>
+                </div>
+            </div>
+            <div class="order-products">
+                ${order.items.map(item => `
+                    <div class="order-product">
+                        <div class="product-info">
+                            <strong>${item.name}</strong>
+                            <div class="product-quantity">Qty: ${item.quantity} × $${item.price}</div>
+                        </div>
+                        <div class="product-total">$${(item.quantity * item.price).toFixed(2)}</div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="order-total">Total: $${order.total.toFixed(2)}</div>
+        </div>
+    `).join('');
+}
+
+function getAllOrders() {
+    const allOrders = [];
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    
+    users.forEach(user => {
+        user.orders.forEach(order => {
+            allOrders.push({
+                ...order,
+                userEmail: user.email
+            });
+        });
+    });
+    
+    return allOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+function loadCouponsAdmin() {
+    const couponsList = document.getElementById('coupons-list');
+    couponsList.innerHTML = coupons.map(coupon => `
+        <div class="admin-item">
+            <div class="admin-item-header">
+                <div>
+                    <h4>${coupon.code} - ${coupon.discount}% OFF</h4>
+                    <div>Expires: ${new Date(coupon.expires).toLocaleDateString()} | Uses: ${coupon.used || 0}/${coupon.maxUses || 'Unlimited'}</div>
+                </div>
+                <div class="admin-actions">
+                    <button class="btn-danger" onclick="deleteCoupon('${coupon.code}')">Delete</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddCouponForm() {
+    addCouponModal.style.display = 'block';
+}
+
+function addNewCoupon() {
+    const formData = new FormData(addCouponForm);
+    const newCoupon = {
+        code: formData.get('code').toUpperCase(),
+        discount: parseInt(formData.get('discount')),
+        expires: formData.get('expires'),
+        maxUses: parseInt(formData.get('maxUses')) || null,
+        used: 0
+    };
+
+    coupons.push(newCoupon);
+    localStorage.setItem('coupons', JSON.stringify(coupons));
+    addCouponModal.style.display = 'none';
+    addCouponForm.reset();
+    loadCouponsAdmin();
+    
+    showNotification('Coupon added successfully!');
+}
+
+function deleteCoupon(code) {
+    if (confirm('Are you sure you want to delete this coupon?')) {
+        coupons = coupons.filter(c => c.code !== code);
+        localStorage.setItem('coupons', JSON.stringify(coupons));
+        loadCouponsAdmin();
+        showNotification('Coupon deleted successfully!');
+    }
+}
+
+function showProductReviews(productId) {
+    const product = products.find(p => p.id === productId);
+    const productReviews = reviews.filter(r => r.productId === productId);
+    
+    reviewsList.innerHTML = `
+        <h3>Reviews for ${product.name}</h3>
+        ${productReviews.length === 0 ? '<p>No reviews yet. Be the first to review!</p>' : ''}
+        ${productReviews.map(review => `
+            <div class="review-item">
+                <div class="review-header">
+                    <div class="review-author">${review.userName}</div>
+                    <div class="review-date">${new Date(review.date).toLocaleDateString()}</div>
+                </div>
+                <div class="product-rating">${generateStarRating(review.rating)}</div>
+                <div class="review-comment">${review.comment}</div>
+            </div>
+        `).join('')}
+    `;
+    
+    reviewsModal.style.display = 'block';
+    currentReviewProduct = productId;
+}
+
+function setStarRating(rating) {
+    const stars = reviewStars.querySelectorAll('span');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+            star.textContent = '★';
+        } else {
+            star.classList.remove('active');
+            star.textContent = '☆';
+        }
+    });
+    reviewRating.value = rating;
+}
+
+function addNewReview() {
+    if (!currentUser) {
+        alert('Please login to add a review!');
+        authModal.style.display = 'block';
+        return;
+    }
+
+    const formData = new FormData(addReviewForm);
+    const newReview = {
+        id: Date.now(),
+        productId: currentReviewProduct,
+        userId: currentUser.id,
+        userName: currentUser.name,
+        rating: parseInt(formData.get('rating')),
+        comment: formData.get('comment'),
+        date: new Date().toISOString()
+    };
+
+    reviews.push(newReview);
+    localStorage.setItem('reviews', JSON.stringify(reviews));
+    
+    updateProductRating(currentReviewProduct);
+    
+    reviewsModal.style.display = 'none';
+    addReviewForm.reset();
+    showNotification('Review added successfully!');
+}
+
+function updateProductRating(productId) {
+    const productReviews = reviews.filter(r => r.productId === productId);
+    if (productReviews.length > 0) {
+        const averageRating = productReviews.reduce((sum, review) => sum + review.rating, 0) / productReviews.length;
+        const product = products.find(p => p.id === productId);
+        product.rating = parseFloat(averageRating.toFixed(1));
+        product.reviews = productReviews.length;
+    }
+}
+
+function loadAnalytics() {
+    const allOrders = getAllOrders();
+    const totalRevenue = allOrders.reduce((sum, order) => sum + order.total, 0);
+    const totalUsers = users.length;
+
+    document.getElementById('total-revenue').textContent = `$${totalRevenue.toFixed(2)}`;
+    document.getElementById('total-orders').textContent = allOrders.length;
+    document.getElementById('total-products').textContent = products.length;
+    document.getElementById('total-users').textContent = totalUsers;
+}
+
+function setupCouponSystem() {
+    const couponSection = document.createElement('div');
+    couponSection.className = 'coupon-section';
+    couponSection.innerHTML = `
+        <h4>Apply Coupon</h4>
+        <div class="coupon-input">
+            <input type="text" id="coupon-code" placeholder="Enter coupon code">
+            <button class="btn-primary" onclick="applyCoupon()">Apply</button>
+        </div>
+        <div id="coupon-message"></div>
+    `;
+    
+    cartTotal.parentNode.insertBefore(couponSection, cartTotal);
+}
+
+function applyCoupon() {
+    const code = document.getElementById('coupon-code').value.toUpperCase();
+    const coupon = coupons.find(c => c.code === code);
+    
+    if (!coupon) {
+        document.getElementById('coupon-message').innerHTML = '<span style="color: #e74c3c;">Invalid coupon code!</span>';
+        return;
+    }
+    
+    if (new Date(coupon.expires) < new Date()) {
+        document.getElementById('coupon-message').innerHTML = '<span style="color: #e74c3c;">Coupon has expired!</span>';
+        return;
+    }
+    
+    if (coupon.maxUses && coupon.used >= coupon.maxUses) {
+        document.getElementById('coupon-message').innerHTML = '<span style="color: #e74c3c;">Coupon usage limit reached!</span>';
+        return;
+    }
+    
+    currentCoupon = coupon;
+    updateCartWithCoupon();
+    document.getElementById('coupon-message').innerHTML = `<span style="color: #27ae60;">Coupon applied! ${coupon.discount}% discount.</span>`;
+}
+
+function updateCartWithCoupon() {
+    if (!currentCoupon) return;
+    
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const discount = (total * currentCoupon.discount) / 100;
+    const finalTotal = total - discount;
+    
+    const discountElement = document.createElement('div');
+    discountElement.className = 'cart-discount';
+    discountElement.innerHTML = `Discount: -$${discount.toFixed(2)}`;
+    
+    const finalTotalElement = document.createElement('div');
+    finalTotalElement.className = 'cart-final-total';
+    finalTotalElement.innerHTML = `Final Total: $${finalTotal.toFixed(2)}`;
+    
+    document.querySelectorAll('.cart-discount, .cart-final-total').forEach(el => el.remove());
+    
+    cartTotal.parentNode.appendChild(discountElement);
+    cartTotal.parentNode.appendChild(finalTotalElement);
+}
+
+function init() {
+    initializeData();
+    displayProducts();
+    updateCart();
+    setupEventListeners();
+    setupCategoryFilter();
+    setupSearch();
+    setupAuthSystem();
+    setupAdminPanel(); 
+    setupCouponSystem(); 
+    updateUserUI();
+    
+    addAdminButton();
+}
+
+function addAdminButton() {
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks && !document.getElementById('admin-btn')) {
+        const adminBtn = document.createElement('button');
+        adminBtn.id = 'admin-btn';
+        adminBtn.className = 'admin-btn';
+        adminBtn.textContent = '⚙️ Admin';
+        navLinks.appendChild(adminBtn);
+    }
+}
+
+
+
 
 document.addEventListener('DOMContentLoaded', init);

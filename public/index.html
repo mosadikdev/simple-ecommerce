@@ -12,24 +12,26 @@
             <div class="nav-container">
                 <h1 class="logo">My Simple Store</h1>
                 <div class="nav-links">
-                    <a href="#home">Home</a>
-                    <a href="#products">Products</a>
-                    <div class="search-container">
-                        <input type="text" id="search-input" placeholder="Search products...">
-                        <button id="search-btn">🔍</button>
-                    </div>
-                    
-                    <div class="user-menu">
-                        <button id="user-btn" class="user-btn">👤 Account</button>
-                        <div id="user-dropdown" class="user-dropdown">
-                            <a href="#" id="orders-link">My Orders</a>
-                            <a href="#" id="profile-link">Profile</a>
-                            <a href="#" id="logout-link">Logout</a>
-                        </div>
-                    </div>
-                    
-                    <button id="cart-btn" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</button>
-                </div>
+    <a href="#home">Home</a>
+    <a href="#products">Products</a>
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Search products...">
+        <button id="search-btn">🔍</button>
+    </div>
+    
+    <button id="admin-btn" class="admin-btn">⚙️ Admin</button>
+    
+    <div class="user-menu">
+        <button id="user-btn" class="user-btn">👤 Account</button>
+        <div id="user-dropdown" class="user-dropdown">
+            <a href="#" id="orders-link">My Orders</a>
+            <a href="#" id="profile-link">Profile</a>
+            <a href="#" id="logout-link">Logout</a>
+        </div>
+    </div>
+    
+    <button id="cart-btn" class="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</button>
+</div>
             </div>
         </nav>
     </header>
@@ -129,6 +131,125 @@
             </div>
         </div>
     </div>
+
+    <div id="admin-modal" class="modal">
+    <div class="modal-content admin-modal">
+        <span class="close">&times;</span>
+        <h2>Admin Dashboard</h2>
+        
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-tab="products">Manage Products</button>
+            <button class="admin-tab" data-tab="orders">Manage Orders</button>
+            <button class="admin-tab" data-tab="coupons">Manage Coupons</button>
+            <button class="admin-tab" data-tab="analytics">Analytics</button>
+        </div>
+
+        <div id="admin-products" class="admin-tab-content active">
+            <div class="admin-header">
+                <h3>Product Management</h3>
+                <button class="btn-primary" onclick="showAddProductForm()">+ Add New Product</button>
+            </div>
+            <div id="products-list" class="admin-list"></div>
+        </div>
+
+        <div id="admin-orders" class="admin-tab-content">
+            <h3>Order Management</h3>
+            <div id="orders-admin-list" class="admin-list"></div>
+        </div>
+
+        <div id="admin-coupons" class="admin-tab-content">
+            <div class="admin-header">
+                <h3>Coupon Management</h3>
+                <button class="btn-primary" onclick="showAddCouponForm()">+ Add New Coupon</button>
+            </div>
+            <div id="coupons-list" class="admin-list"></div>
+        </div>
+
+        <div id="admin-analytics" class="admin-tab-content">
+            <h3>Store Analytics</h3>
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h4>Total Revenue</h4>
+                    <div class="analytics-value" id="total-revenue">$0</div>
+                </div>
+                <div class="analytics-card">
+                    <h4>Total Orders</h4>
+                    <div class="analytics-value" id="total-orders">0</div>
+                </div>
+                <div class="analytics-card">
+                    <h4>Total Products</h4>
+                    <div class="analytics-value" id="total-products">0</div>
+                </div>
+                <div class="analytics-card">
+                    <h4>Total Users</h4>
+                    <div class="analytics-value" id="total-users">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="add-product-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Add New Product</h2>
+        <form id="add-product-form">
+            <div class="form-grid">
+                <input type="text" name="name" placeholder="Product Name" required>
+                <input type="number" name="price" placeholder="Price" step="0.01" required>
+                <input type="text" name="image" placeholder="Image URL" required>
+                <input type="text" name="category" placeholder="Category" required>
+                <input type="number" name="stock" placeholder="Stock Quantity" required>
+                <input type="number" name="rating" placeholder="Rating (0-5)" step="0.1" min="0" max="5">
+            </div>
+            <textarea name="description" placeholder="Product Description" required></textarea>
+            <button type="submit" class="btn-primary">Add Product</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add Coupon Modal -->
+<div id="add-coupon-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Add New Coupon</h2>
+        <form id="add-coupon-form">
+            <div class="form-grid">
+                <input type="text" name="code" placeholder="Coupon Code" required>
+                <input type="number" name="discount" placeholder="Discount Percentage" required>
+                <input type="date" name="expires" placeholder="Expiry Date" required>
+                <input type="number" name="maxUses" placeholder="Maximum Uses">
+            </div>
+            <button type="submit" class="btn-primary">Add Coupon</button>
+        </form>
+    </div>
+</div>
+
+<!-- Product Reviews Modal -->
+<div id="reviews-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Product Reviews</h2>
+        <div id="reviews-list"></div>
+        <form id="add-review-form" class="review-form">
+            <h3>Add Your Review</h3>
+            <div class="rating-input">
+                <label>Rating:</label>
+                <div class="stars" id="review-stars">
+                    <span data-rating="1">☆</span>
+                    <span data-rating="2">☆</span>
+                    <span data-rating="3">☆</span>
+                    <span data-rating="4">☆</span>
+                    <span data-rating="5">☆</span>
+                </div>
+                <input type="hidden" id="review-rating" name="rating" required>
+            </div>
+            <textarea name="comment" placeholder="Write your review..." required></textarea>
+            <button type="submit" class="btn-primary">Submit Review</button>
+        </form>
+    </div>
+</div>
 
     <footer>
         <p>&copy; 2025. Built with ❤️</p>
