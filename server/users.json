@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": 1761418114018,
+    "name": "mohamed",
+    "email": "mohamedsadiik26100@gmail.com",
+    "password": "123456",
+    "createdAt": "2025-10-25T18:48:34.018Z",
+    "orders": [
+      {
+        "id": "ORD_1761418145837",
+        "items": [
+          {
+            "id": 2,
+            "name": "Smartphone",
+            "price": 699.99,
+            "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
+            "description": "Latest smartphone with advanced features",
+            "category": "electronics",
+            "rating": 4.8,
+            "reviews": 256,
+            "quantity": 1
+          }
+        ],
+        "total": 699.99,
+        "date": "2025-10-25T18:49:05.837Z",
+        "status": "completed"
+      }
+    ]
+  },
+  {
+    "id": 1761419772726,
+    "name": "Mohamed sadik",
+    "email": "mohamed@gmail.com",
+    "password": "123456",
+    "createdAt": "2025-10-25T19:16:12.726Z",
+    "orders": []
+  }
+]

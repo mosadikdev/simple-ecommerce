@@ -162,16 +162,6 @@ const products = [
     }
 ];
 
-function init() {
-    initializeData(); 
-    displayProducts();
-    updateCart();
-    setupEventListeners();
-    setupCategoryFilter();
-    setupSearch();
-    setupAuthSystem();
-    updateUserUI();
-}
 
 function displayProducts() {
     if (!productsGrid) {
@@ -340,8 +330,9 @@ function setupEventListeners() {
 
 async function processOrder() {
     if (!currentUser) {
-        alert('Please login to complete your order!');
-        authModal.style.display = 'block';
+        if (confirm('You need to login to complete your order. Would you like to login now?')) {
+            window.location.href = 'login.html';
+        }
         return;
     }
 
@@ -526,77 +517,57 @@ function closeProductModal() {
 }
 
 function updateUserUI() {
+    const guestMenu = document.getElementById('guest-menu');
+    const userMenu = document.getElementById('user-menu');
+    const userName = document.getElementById('user-name');
+
     if (currentUser) {
-        userBtn.innerHTML = `👤 ${currentUser.name.split(' ')[0]}`;
-        userBtn.style.background = '#27ae60';
+        if (guestMenu) guestMenu.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'flex';
+        if (userName) userName.textContent = currentUser.name.split(' ')[0];
+        
+        if (userBtn) {
+            userBtn.innerHTML = `👤 ${currentUser.name.split(' ')[0]}`;
+            userBtn.style.background = '#27ae60';
+        }
     } else {
-        userBtn.innerHTML = '👤 Account';
-        userBtn.style.background = '#3498db';
+        if (guestMenu) guestMenu.style.display = 'flex';
+        if (userMenu) userMenu.style.display = 'none';
+        
+        if (userBtn) {
+            userBtn.innerHTML = '👤 Account';
+            userBtn.style.background = '#3498db';
+        }
     }
 }
 
 function setupAuthSystem() {
-    userBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (currentUser) {
-            userDropdown.classList.toggle('show');
-        } else {
-            authModal.style.display = 'block';
-        }
-    });
+    if (userBtn) {
+        userBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (currentUser) {
+                userDropdown.classList.toggle('show');
+            }
+        });
+    }
 
     document.addEventListener('click', () => {
-        userDropdown.classList.remove('show');
+        if (userDropdown) userDropdown.classList.remove('show');
     });
 
-    authTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const targetTab = tab.dataset.tab;
-            
-            authTabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            document.querySelectorAll('.auth-form').forEach(form => {
-                form.classList.remove('active');
-            });
-            document.getElementById(`${targetTab}-form`).classList.add('active');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            logoutUser();
         });
-    });
+    }
 
-    loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const inputs = loginForm.querySelectorAll('input');
-        const email = inputs[0].value;
-        const password = inputs[1].value;
-        
-        loginUser(email, password);
-    });
-
-    registerForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const inputs = registerForm.querySelectorAll('input');
-        const name = inputs[0].value;
-        const email = inputs[1].value;
-        const password = inputs[2].value;
-        const confirmPassword = inputs[3].value;
-        
-        if (password !== confirmPassword) {
-            alert('Passwords do not match!');
-            return;
-        }
-        
-        registerUser(name, email, password);
-    });
-
-    logoutLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        logoutUser();
-    });
-
-    ordersLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        showOrdersHistory();
-    });
+    if (ordersLink) {
+        ordersLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showOrdersHistory();
+        });
+    }
 }
 
 async function registerUser(name, email, password) {
@@ -664,9 +635,13 @@ function logoutUser() {
     localStorage.removeItem('currentUser');
     
     updateUserUI();
-    userDropdown.classList.remove('show');
+    if (userDropdown) userDropdown.classList.remove('show');
     
     showNotification('Logged out successfully.');
+    
+    setTimeout(() => {
+        window.location.reload();
+    }, 1000);
 }
 
 function showOrdersHistory() {
@@ -1114,12 +1089,12 @@ function init() {
     setupEventListeners();
     setupCategoryFilter();
     setupSearch();
-    setupAuthSystem();
-    setupAdminPanel(); 
-    setupCouponSystem(); 
-    updateUserUI();
+    setupAuthSystem(); 
+    setupAdminPanel();
+    setupCouponSystem();
+    updateUserUI(); 
     
-    addAdminButton();
+    console.log('✅ Application initialized with page-based authentication');
 }
 
 function addAdminButton() {
