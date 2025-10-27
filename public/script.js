@@ -194,6 +194,13 @@ function addToCart(productId) {
         return;
     }
 
+    if (!currentUser) {
+        if (confirm('You need to login to add items to cart. Would you like to login now?')) {
+            window.location.href = 'login.html';
+        }
+        return;
+    }
+
     if (!Array.isArray(cart)) {
         console.warn('Cart is not an array, resetting...');
         cart = [];
@@ -328,6 +335,18 @@ function setupEventListeners() {
     });
 }
 
+function validateOrderData(orderData) {
+    if (!orderData.items || !Array.isArray(orderData.items) || orderData.items.length === 0) {
+        throw new Error('Invalid order items');
+    }
+    
+    if (!orderData.total || orderData.total <= 0) {
+        throw new Error('Invalid order total');
+    }
+    
+    return true;
+}
+
 async function processOrder() {
     if (!currentUser) {
         if (confirm('You need to login to complete your order. Would you like to login now?')) {
@@ -336,15 +355,22 @@ async function processOrder() {
         return;
     }
 
-    const orderData = {
-        id: 'ORD_' + Date.now(),
-        items: [...cart],
-        total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-        date: new Date().toISOString(),
-        status: 'completed'
-    };
-    
     try {
+        if (cart.length === 0) {
+            alert('Your cart is empty!');
+            return;
+        }
+
+        const orderData = {
+            id: 'ORD_' + Date.now(),
+            items: [...cart],
+            total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            date: new Date().toISOString(),
+            status: 'completed'
+        };
+
+        validateOrderData(orderData);
+
         const response = await fetch('/api/orders', {
             method: 'POST',
             headers: {
@@ -355,6 +381,10 @@ async function processOrder() {
                 orderData 
             })
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const data = await response.json();
         
@@ -370,11 +400,11 @@ async function processOrder() {
             checkoutModal.style.display = 'none';
             checkoutForm.reset();
         } else {
-            alert(data.error || 'Order failed');
+            alert(data.error || 'Order failed. Please try again.');
         }
     } catch (error) {
-        console.error('Order error:', error);
-        alert('Network error. Please try again.');
+        console.error('Order processing error:', error);
+        alert('There was a problem processing your order. Please try again.');
     }
 }
 
@@ -520,6 +550,8 @@ function updateUserUI() {
     const guestMenu = document.getElementById('guest-menu');
     const userMenu = document.getElementById('user-menu');
     const userName = document.getElementById('user-name');
+    const adminBtn = document.getElementById('admin-btn');
+    const cartBtn = document.getElementById('cart-btn');
 
     if (currentUser) {
         if (guestMenu) guestMenu.style.display = 'none';
@@ -530,9 +562,24 @@ function updateUserUI() {
             userBtn.innerHTML = `👤 ${currentUser.name.split(' ')[0]}`;
             userBtn.style.background = '#27ae60';
         }
+
+        if (cartBtn) cartBtn.style.display = 'block';
+
+        if (adminBtn) {
+            const adminEmails = ['admin@store.com']; 
+            if (adminEmails.includes(currentUser.email)) {
+                adminBtn.style.display = 'block';
+            } else {
+                adminBtn.style.display = 'none';
+            }
+        }
+
     } else {
         if (guestMenu) guestMenu.style.display = 'flex';
         if (userMenu) userMenu.style.display = 'none';
+        
+        if (adminBtn) adminBtn.style.display = 'none';
+        if (cartBtn) cartBtn.style.display = 'none';
         
         if (userBtn) {
             userBtn.innerHTML = '👤 Account';
@@ -547,6 +594,8 @@ function setupAuthSystem() {
             e.stopPropagation();
             if (currentUser) {
                 userDropdown.classList.toggle('show');
+            } else {
+                window.location.href = 'login.html';
             }
         });
     }
@@ -567,66 +616,6 @@ function setupAuthSystem() {
             e.preventDefault();
             showOrdersHistory();
         });
-    }
-}
-
-async function registerUser(name, email, password) {
-    try {
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name, email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            currentUser = data.user;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            updateUserUI();
-            authModal.style.display = 'none';
-            registerForm.reset();
-            
-            showNotification(`Welcome ${name}! Account created successfully.`);
-        } else {
-            alert(data.error || 'Registration failed');
-        }
-    } catch (error) {
-        console.error('Registration error:', error);
-        alert('Network error. Please try again.');
-    }
-}
-
-async function loginUser(email, password) {
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            currentUser = data.user;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            updateUserUI();
-            authModal.style.display = 'none';
-            loginForm.reset();
-            
-            showNotification(`Welcome back, ${data.user.name.split(' ')[0]}!`);
-        } else {
-            alert(data.error || 'Login failed');
-        }
-    } catch (error) {
-        console.error('Login error:', error);
-        alert('Network error. Please try again.');
     }
 }
 
@@ -709,31 +698,41 @@ function sendOrderConfirmation(order) {
 
 
 function setupAdminPanel() {
+    console.log('🔧 Setting up admin panel...');
+    
     const adminBtn = document.getElementById('admin-btn');
+    
     if (adminBtn) {
         adminBtn.addEventListener('click', () => {
+            console.log('🎯 Admin button clicked!');
             showAdminLogin();
         });
     }
 
-    adminTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const targetTab = tab.dataset.tab;
-            
-            adminTabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            document.querySelectorAll('.admin-tab-content').forEach(content => {
-                content.classList.remove('active');
+    if (adminTabs && adminTabs.length > 0) {
+        adminTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                adminTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                document.querySelectorAll('.admin-tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                const targetContent = document.getElementById(`admin-${targetTab}`);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+                
+                if (targetTab === 'products') loadProductsAdmin();
+                if (targetTab === 'orders') loadOrdersAdmin();
+                if (targetTab === 'coupons') loadCouponsAdmin();
+                if (targetTab === 'analytics') loadAnalytics();
             });
-            document.getElementById(`admin-${targetTab}`).classList.add('active');
-            
-            if (targetTab === 'products') loadProductsAdmin();
-            if (targetTab === 'orders') loadOrdersAdmin();
-            if (targetTab === 'coupons') loadCouponsAdmin();
-            if (targetTab === 'analytics') loadAnalytics();
         });
-    });
+    }
 
     addProductForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -1083,18 +1082,19 @@ function updateCartWithCoupon() {
 }
 
 function init() {
-    initializeData();
+    initializeData(); 
+    updateUserUI();   
     displayProducts();
     updateCart();
     setupEventListeners();
     setupCategoryFilter();
     setupSearch();
-    setupAuthSystem(); 
+    setupAuthSystem();
     setupAdminPanel();
     setupCouponSystem();
-    updateUserUI(); 
     
-    console.log('✅ Application initialized with page-based authentication');
+    console.log('✅ Application initialized successfully');
+    console.log('👤 Current user:', currentUser ? currentUser.email : 'Not logged in');
 }
 
 function addAdminButton() {
