@@ -34,5 +34,14 @@
     "password": "123456",
     "createdAt": "2025-10-25T19:16:12.726Z",
     "orders": []
+  },
+  {
+    "id": 1,
+    "name": "Store Administrator",
+    "email": "admin@store.com",
+    "password": "admin123",
+    "createdAt": "2025-11-01T19:05:35.997Z",
+    "orders": [],
+    "role": "admin"
   }
 ]

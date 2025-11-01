@@ -19,46 +19,6 @@ const addReviewForm = document.getElementById('add-review-form');
 const reviewStars = document.getElementById('review-stars');
 const reviewRating = document.getElementById('review-rating');
 
-function initializeData() {
-    try {
-        const cartData = localStorage.getItem('cart');
-        if (cartData) {
-            const parsedCart = JSON.parse(cartData);
-            if (Array.isArray(parsedCart)) {
-                cart = parsedCart;
-            } else {
-                console.warn('Cart data is corrupted, resetting to empty array');
-                localStorage.removeItem('cart');
-            }
-        }
-    } catch (error) {
-        console.error('Error loading cart data:', error);
-        cart = [];
-    }
-
-    try {
-        const userData = localStorage.getItem('currentUser');
-        if (userData) {
-            currentUser = JSON.parse(userData);
-        }
-    } catch (error) {
-        console.error('Error loading user data:', error);
-        currentUser = null;
-    }
-
-    try {
-        const usersData = localStorage.getItem('users');
-        if (usersData) {
-            const parsedUsers = JSON.parse(usersData);
-            if (Array.isArray(parsedUsers)) {
-                users = parsedUsers;
-            }
-        }
-    } catch (error) {
-        console.error('Error loading users data:', error);
-        users = [];
-    }
-}
 
 const productsGrid = document.getElementById('products-grid');
 const cartBtn = document.getElementById('cart-btn');
@@ -162,6 +122,72 @@ const products = [
     }
 ];
 
+
+
+function createDefaultAdmin() {
+    const adminUser = {
+        id: 1, 
+        name: 'Store Administrator',
+        email: 'admin@store.com',
+        password: 'admin123', 
+        createdAt: new Date().toISOString(),
+        orders: [],
+        role: 'admin' 
+    };
+
+    const existingAdmin = users.find(user => user.email === 'admin@store.com');
+    if (!existingAdmin) {
+        users.push(adminUser);
+        localStorage.setItem('users', JSON.stringify(users));
+        console.log('✅ Default admin account created');
+    }
+}
+
+function initializeData() {
+    try {
+        const cartData = localStorage.getItem('cart');
+        if (cartData) {
+            const parsedCart = JSON.parse(cartData);
+            if (Array.isArray(parsedCart)) {
+                cart = parsedCart;
+            } else {
+                console.warn('Cart data is corrupted, resetting to empty array');
+                localStorage.removeItem('cart');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading cart data:', error);
+        cart = [];
+    }
+
+    try {
+        const userData = localStorage.getItem('currentUser');
+        if (userData) {
+            currentUser = JSON.parse(userData);
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        currentUser = null;
+    }
+
+    try {
+        const usersData = localStorage.getItem('users');
+        if (usersData) {
+            const parsedUsers = JSON.parse(usersData);
+            if (Array.isArray(parsedUsers)) {
+                users = parsedUsers;
+                createDefaultAdmin();
+            }
+        } else {
+            users = [];
+            createDefaultAdmin();
+        }
+    } catch (error) {
+        console.error('Error loading users data:', error);
+        users = [];
+        createDefaultAdmin();
+    }
+}
 
 function displayProducts() {
     if (!productsGrid) {
@@ -566,9 +592,9 @@ function updateUserUI() {
         if (cartBtn) cartBtn.style.display = 'block';
 
         if (adminBtn) {
-            const adminEmails = ['admin@store.com']; 
-            if (adminEmails.includes(currentUser.email)) {
+            if (isAdmin(currentUser)) {
                 adminBtn.style.display = 'block';
+                console.log('🔧 Admin button shown for:', currentUser.email);
             } else {
                 adminBtn.style.display = 'none';
             }
@@ -585,7 +611,38 @@ function updateUserUI() {
             userBtn.innerHTML = '👤 Account';
             userBtn.style.background = '#3498db';
         }
+
+        if (currentUser && isAdmin(currentUser)) {
+        const adminIndicator = document.getElementById('admin-indicator');
+        if (!adminIndicator) {
+            const indicator = document.createElement('div');
+            indicator.id = 'admin-indicator';
+            indicator.style.cssText = `
+                background: #9b59b6;
+                color: white;
+                padding: 0.25rem 0.5rem;
+                border-radius: 10px;
+                font-size: 0.7rem;
+                font-weight: bold;
+                margin-left: 0.5rem;
+            `;
+            indicator.textContent = 'ADMIN';
+            
+            if (userBtn) {
+                userBtn.appendChild(indicator);
+            }
+        }
+    } else {
+        const adminIndicator = document.getElementById('admin-indicator');
+        if (adminIndicator) {
+            adminIndicator.remove();
+        }
     }
+    }
+}
+
+function isAdmin(user) {
+    return user && user.email === 'admin@store.com';
 }
 
 function setupAuthSystem() {
@@ -763,16 +820,54 @@ function setupAdminPanel() {
 }
 
 function showAdminLogin() {
-    const email = prompt('Admin Email:');
-    const password = prompt('Admin Password:');
+    console.log('🔐 Checking admin access...');
     
-    const admin = adminUsers.find(u => u.email === email && u.password === password);
-    if (admin) {
+    if (currentUser && isAdmin(currentUser)) {
+        console.log('✅ Current user is admin, showing admin panel');
         adminModal.style.display = 'block';
         loadProductsAdmin();
-    } else {
-        alert('Invalid admin credentials!');
+        return;
     }
+
+    if (currentUser) {
+        const proceed = confirm('You are logged in as a regular user. Do you want to login as admin?');
+        if (!proceed) return;
+    }
+
+    const email = prompt('Admin Email:');
+    if (!email) return;
+
+    const password = prompt('Admin Password:');
+    if (!password) return;
+
+    console.log('📧 Admin login attempt:', email);
+    
+    const adminUser = users.find(u => u.email === email && u.password === password);
+    
+    if (adminUser && isAdmin(adminUser)) {
+        console.log('✅ Admin login successful');
+        
+        currentUser = adminUser;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        updateUserUI();
+        
+        adminModal.style.display = 'block';
+        loadProductsAdmin();
+        
+        showNotification(`Welcome Admin! ${adminUser.name}`);
+    } else {
+        console.log('❌ Admin login failed');
+        alert('Invalid admin credentials!\n\nDefault admin account:\nEmail: admin@store.com\nPassword: admin123');
+    }
+}
+
+function validateRegistration(email) {
+    if (email === 'admin@store.com') {
+        showError('This email address is reserved for administration.');
+        return false;
+    }
+    return true;
 }
 
 function loadProductsAdmin() {

@@ -425,3 +425,38 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason, promise) => {
     console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
 });
+
+function initializeDefaultAdmin() {
+    const usersData = readJSONFile(USERS_FILE);
+    const adminExists = usersData.find(user => user.email === 'admin@store.com');
+    
+    if (!adminExists) {
+        const adminUser = {
+            id: 1,
+            name: 'Store Administrator',
+            email: 'admin@store.com',
+            password: 'admin123',
+            createdAt: new Date().toISOString(),
+            orders: [],
+            role: 'admin'
+        };
+        
+        usersData.push(adminUser);
+        writeJSONFile(USERS_FILE, usersData);
+        console.log('✅ Default admin account created on server');
+    }
+}
+
+initializeDefaultAdmin();
+
+app.get('/api/admin/check', (req, res) => {
+    const { userId } = req.query;
+    const usersData = readJSONFile(USERS_FILE);
+    
+    const user = usersData.find(u => u.id === parseInt(userId));
+    if (user && user.email === 'admin@store.com') {
+        res.json({ isAdmin: true });
+    } else {
+        res.json({ isAdmin: false });
+    }
+});
